@@ -17,4 +17,4 @@ doc/blocks/.obsidian
 
 apps/*/dist/
 packages/*/dist/
-!packages/github-action-summary/dist/
+!packages/github-actions-summary/dist/

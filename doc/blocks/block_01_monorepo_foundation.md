@@ -70,7 +70,7 @@ platform-study-monorepo/
   apps/
     sample-nest-api/
   packages/
-    github-action-summary/
+    github-actions-summary/
   infra/
     terraform/
     cdk/
@@ -363,14 +363,14 @@ That makes the custom actions useful in a realistic scenario.
 Create the package folder:
 
 ```bash
-mkdir -p packages/github-action-summary/src
+mkdir -p packages/github-actions-summary/src
 ```
 
-### 11.1 `packages/github-action-summary/package.json`
+### 11.1 `packages/github-actions-summary/package.json`
 
 ```json
 {
-  "name": "@packages/github-action-summary",
+  "name": "@packages/github-actions-summary",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -388,7 +388,7 @@ mkdir -p packages/github-action-summary/src
 }
 ```
 
-### 11.2 `packages/github-action-summary/tsconfig.json`
+### 11.2 `packages/github-actions-summary/tsconfig.json`
 
 ```json
 {
@@ -401,11 +401,11 @@ mkdir -p packages/github-action-summary/src
 }
 ```
 
-### 11.3 `packages/github-action-summary/src/index.ts`
+### 11.3 `packages/github-actions-summary/src/index.ts`
 
 ```ts
 export function placeholder(): string {
-  return 'github-action-summary placeholder';
+  return 'github-actions-summary placeholder';
 }
 
 console.log(placeholder());
@@ -571,7 +571,7 @@ git commit -m "chore: add root monorepo workspace"
 git add apps/sample-nest-api
 git commit -m "feat: add sample NestJS app"
 
-git add packages/github-action-summary
+git add packages/github-actions-summary
 git commit -m "feat: add github action summary package scaffold"
 
 git add .github/workflows/ci.yml
@@ -590,7 +590,7 @@ Before moving to Block 02, verify:
 - `npm run test` works at root
 - NestJS app runs locally
 - CI workflow exists and is committed
-- `packages/github-action-summary` builds successfully
+- `packages/github-actions-summary` builds successfully
 
 Run the app:
 
@@ -605,7 +605,7 @@ You can also run a specific workspace directly with path syntax if needed:
 ```bash
 npm run build -w apps/sample-nest-api
 npm run test -w apps/sample-nest-api
-npm run build -w packages/github-action-summary
+npm run build -w packages/github-actions-summary
 ```
 
 ---
@@ -685,7 +685,7 @@ git init
 mkdir -p .github/workflows apps packages infra/terraform infra/cdk docs/blocks
 
 npx -y @nestjs/cli@11 new apps/sample-nest-api --package-manager npm --strict
-mkdir -p packages/github-action-summary/src
+mkdir -p packages/github-actions-summary/src
 
 npm install
 npm run build

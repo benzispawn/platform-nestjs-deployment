@@ -50,7 +50,7 @@ We will use the package created in Block 01:
 
 ```text
 packages/
-  github-action-summary/
+  github-actions-summary/
     action.yml
     package.json
     tsconfig.json
@@ -138,7 +138,7 @@ From the repository root, install build/runtime dependencies for the action pack
 ### 5.1 Runtime dependencies for the action
 
 ```bash
-npm install -w packages/github-action-summary @actions/core @actions/github
+npm install -w packages/github-actions-summary @actions/core @actions/github
 ```
 
 ### 5.2 Dev/build dependency for bundling
@@ -147,7 +147,7 @@ GitHub custom JavaScript actions typically need a compiled distributable file co
 For that, use `tsup` to bundle the action.
 
 ```bash
-npm install -D -w packages/github-action-summary tsup
+npm install -D -w packages/github-actions-summary tsup
 ```
 
 Why bundle now:
@@ -159,11 +159,11 @@ Why bundle now:
 
 ## 6. Update the action package `package.json`
 
-Replace `packages/github-action-summary/package.json` with:
+Replace `packages/github-actions-summary/package.json` with:
 
 ```json
 {
-  "name": "@packages/github-action-summary",
+  "name": "@packages/github-actions-summary",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -195,7 +195,7 @@ If you prefer to keep things minimal, you can remove `dev`.
 
 ## 7. Keep the package `tsconfig.json`
 
-Use this in `packages/github-action-summary/tsconfig.json`:
+Use this in `packages/github-actions-summary/tsconfig.json`:
 
 ```json
 {
@@ -212,7 +212,7 @@ Use this in `packages/github-action-summary/tsconfig.json`:
 
 ## 8. Create `action.yml`
 
-Create `packages/github-action-summary/action.yml`:
+Create `packages/github-actions-summary/action.yml`:
 
 ```yaml
 name: 'GitHub Action Summary'
@@ -495,7 +495,7 @@ In our design, `index.ts` is acting like the **application service / orchestrato
 
 ## 13. Add a local fixture
 
-Create `packages/github-action-summary/fixtures/ci-result.sample.json`:
+Create `packages/github-actions-summary/fixtures/ci-result.sample.json`:
 
 ```json
 {
@@ -532,13 +532,13 @@ This file will help you:
 From the repository root:
 
 ```bash
-npm run build -w packages/github-action-summary
+npm run build -w packages/github-actions-summary
 ```
 
 After the build, verify that this exists:
 
 ```text
-packages/github-action-summary/dist/index.js
+packages/github-actions-summary/dist/index.js
 ```
 
 That compiled file is the artifact GitHub Actions will execute.
@@ -613,7 +613,7 @@ jobs:
 
       - name: Run summary action
         id: summary
-        uses: ./packages/github-action-summary
+        uses: ./packages/github-actions-summary
         with:
           input-file: ci-result.json
           summary-title: 'CI Summary Report'
@@ -631,7 +631,7 @@ jobs:
 
 ## 16. Important local-action behavior in GitHub
 
-For `uses: ./packages/github-action-summary` to work, the action directory must contain:
+For `uses: ./packages/github-actions-summary` to work, the action directory must contain:
 - `action.yml`
 - the referenced compiled JS file in `dist/`
 
@@ -653,7 +653,7 @@ node_modules/
 
 coverage/
 dist/
-!packages/github-action-summary/dist/
+!packages/github-actions-summary/dist/
 .tmp/
 
 .env
@@ -690,7 +690,7 @@ coverage/
 
 apps/*/dist/
 packages/*/dist/
-!packages/github-action-summary/dist/
+!packages/github-actions-summary/dist/
 ```
 
 ---
@@ -709,13 +709,13 @@ npm run test
 Then explicitly rebuild the action:
 
 ```bash
-npm run build -w packages/github-action-summary
+npm run build -w packages/github-actions-summary
 ```
 
 Check generated files:
 
 ```bash
-ls packages/github-action-summary/dist
+ls packages/github-actions-summary/dist
 ```
 
 You should see at least:
@@ -730,7 +730,7 @@ index.d.ts
 ## 18. Suggested commit sequence
 
 ```bash
-git add packages/github-action-summary
+git add packages/github-actions-summary
 git add .github/workflows/ci.yml
 git add .gitignore
 git commit -m "feat: add first TypeScript GitHub summary action"
@@ -743,8 +743,8 @@ git commit -m "feat: add first TypeScript GitHub summary action"
 Before moving to Block 03, verify:
 
 - `action.yml` exists
-- `packages/github-action-summary/dist/index.js` exists
-- workflow uses `./packages/github-action-summary`
+- `packages/github-actions-summary/dist/index.js` exists
+- workflow uses `./packages/github-actions-summary`
 - the job summary in GitHub shows the markdown report
 - outputs are printed in the workflow log
 - changing one check status to `failed` changes `overall-status`
@@ -843,10 +843,10 @@ Goal of next block:
 ## 25. Command recap
 
 ```bash
-npm install -w packages/github-action-summary @actions/core @actions/github
-npm install -D -w packages/github-action-summary tsup
+npm install -w packages/github-actions-summary @actions/core @actions/github
+npm install -D -w packages/github-actions-summary tsup
 
-npm run build -w packages/github-action-summary
+npm run build -w packages/github-actions-summary
 npm run build
 npm run lint
 npm run test

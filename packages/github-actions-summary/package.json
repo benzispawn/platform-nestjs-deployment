@@ -1,5 +1,5 @@
 {
-  "name": "@packages/github-action-summary",
+  "name": "@packages/github-actions-summary",
   "version": "0.0.1",
   "private": true,
   "type": "module",

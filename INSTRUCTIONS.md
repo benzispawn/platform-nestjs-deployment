@@ -25,4 +25,4 @@ npm run format
 npm run start:dev -w @apps/sample-nest-api
 npm run build -w apps/sample-nest-api
 npm run test -w apps/sample-nest-api
-npm run build -w packages/github-action-summary
+npm run build -w packages/github-actions-summary
