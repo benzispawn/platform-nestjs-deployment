@@ -1,0 +1,20 @@
+{
+  "title": "Sample Nest API CI",
+  "checks": [
+    {
+      "name": "lint",
+      "status": "passed",
+      "details": "ESLint completed successfully"
+    },
+    {
+      "name": "test",
+      "status": "passed",
+      "details": "All unit tests passed"
+    },
+    {
+      "name": "build",
+      "status": "failed",
+      "details": "TypeScript compilation failed in one workspace"
+    }
+  ]
+}

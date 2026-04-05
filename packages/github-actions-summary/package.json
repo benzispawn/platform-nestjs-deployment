@@ -6,12 +6,15 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsup src/index.ts --format esm --dts --out-dir dist",
     "lint": "eslint \"src/**/*.ts\"",
-    "test": "node --test"
+    "test": "node --test",
+    "dev": "node --loader ts-node/esm src/index.ts"
   },
   "devDependencies": {
     "@actions/core": "^1.11.1",
-    "@actions/github": "^6.0.1"
+    "@actions/github": "^6.0.1",
+    "@types/node": "^25.5.2",
+    "tsup": "^8.5.1"
   }
 }

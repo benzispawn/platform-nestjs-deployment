@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches:
+      - develop
       - main
 
 jobs:
@@ -32,9 +33,42 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Workflow summary
+      - name: Create CI result JSON
         run: |
-          echo "## CI Result" >> $GITHUB_STEP_SUMMARY
-          echo "- Lint: passed" >> $GITHUB_STEP_SUMMARY
-          echo "- Test: passed" >> $GITHUB_STEP_SUMMARY
-          echo "- Build: passed" >> $GITHUB_STEP_SUMMARY
+          cat <<'EOF' > ci-result.json
+          {
+            "title": "Sample Nest API CI",
+            "checks": [
+              {
+                "name": "lint",
+                "status": "passed",
+                "details": "Lint completed successfully"
+              },
+              {
+                "name": "test",
+                "status": "passed",
+                "details": "Tests completed successfully"
+              },
+              {
+                "name": "build",
+                "status": "passed",
+                "details": "Build completed successfully"
+              }
+            ]
+          }
+          EOF
+
+      - name: Run summary action
+        id: summary
+        uses: ./packages/github-action-summary
+        with:
+          input-file: ci-result.json
+          summary-title: 'CI Summary Report'
+
+      - name: Print outputs
+        run: |
+          echo "total=${{ steps.summary.outputs.total }}"
+          echo "passed=${{ steps.summary.outputs.passed }}"
+          echo "failed=${{ steps.summary.outputs.failed }}"
+          echo "skipped=${{ steps.summary.outputs.skipped }}"
+          echo "overall-status=${{ steps.summary.outputs.overall-status }}"
