@@ -22,53 +22,80 @@ jobs:
           cache: npm
 
       - name: Install dependencies
+        continue-on-error: true
         run: npm ci
 
       - name: Lint
+        continue-on-error: true
         run: npm run lint
 
       - name: Test
+        continue-on-error: true
         run: npm run test
 
       - name: Build
+        continue-on-error: true
         run: npm run build
 
-      - name: Create CI result JSON
-        run: |
-          cat <<'EOF' > ci-result.json
-          {
-            "title": "Sample Nest API CI",
-            "checks": [
-              {
-                "name": "lint",
-                "status": "passed",
-                "details": "Lint completed successfully"
-              },
-              {
-                "name": "test",
-                "status": "passed",
-                "details": "Tests completed successfully"
-              },
-              {
-                "name": "build",
-                "status": "passed",
-                "details": "Build completed successfully"
-              }
-            ]
-          }
-          EOF
+      - name: Generate CI result JSON
+        if: ${{ always()}}
+        run: npm run report:ci -- artifacts/ci-result.json
+        env:
+          REPORT_TITLE: Sample Nest API CI
+          LINT_OUTCOME: ${{ steps.lint.outcome }}
+          LINT_DETAILS: Lint workspace run completed.
+          TEST_OUTCOME: ${{ steps.test.outcome }}
+          TEST_DETAILS: Test workspace run completed.
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          BUILD_DETAILS: Build workspace run completed.
 
       - name: Run summary action
         id: summary
         uses: ./packages/github-actions-summary
+        continue-on-error: true
         with:
           input-file: ci-result.json
           summary-title: 'CI Summary Report'
 
-      - name: Print outputs
+      - name: Annotate lint failure
+        if: ${{ steps.lint.outcome == 'failure' }}
+        run: echo '::error title=Lint failed::The lint step failed. Check eslint output in the logs.'
+
+      - name: Annotate test failure
+        if: ${{ steps.test.outcome == 'failure' }}
+        run: echo '::error title=Tests failed::The test step failed. Check jest output in the logs.'
+
+      - name: Annotate build failure
+        if: ${{ steps.build.outcome == 'failure' }}
+        run: echo '::error title=Build failed::The build step failed. Check compilation output in the logs.'
+
+      - name: Upload CI report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-report
+          path: artifacts/ci-result.json
+
+      - name: Render markdown artifact
+        run: npm run report:ci:md -- artifacts/ci-result.json artifacts/ci-report.md
+
+      - name: Upload CI report artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-report
+          path: |
+            artifacts/ci-result.json
+            artifacts/ci-report.md
+
+      - name: Print Summary outputs
         run: |
           echo "total=${{ steps.summary.outputs.total }}"
           echo "passed=${{ steps.summary.outputs.passed }}"
           echo "failed=${{ steps.summary.outputs.failed }}"
           echo "skipped=${{ steps.summary.outputs.skipped }}"
           echo "overall-status=${{ steps.summary.outputs.overall-status }}"
+
+      - name: Fail job if any quality gate failed
+        if: ${{ steps.summary.outputs.overall-status == 'failed' }}
+        run: |
+          echo 'At least one CI check failed.'
+          exit 1

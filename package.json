@@ -15,7 +15,9 @@
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "report:ci": "node scripts/generate-ci-report.mjs",
+    "report:ci:md": "node scripts/render-ci-report-markdown.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.24.0",

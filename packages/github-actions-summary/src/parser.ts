@@ -64,8 +64,18 @@ export function computeStats(input: SummaryInput): SummaryStats {
         },
     );
 
+    let overallStatus: CheckStatus;
+
+    if (stats.failed > 0) {
+        overallStatus = 'failed';
+    } else if (stats.passed === 0 && stats.skipped > 0) {
+        overallStatus = 'skipped';
+    } else {
+        overallStatus = 'passed';
+    }
+
     return {
         ...stats,
-        overallStatus: stats.failed > 0 ? 'failed' : 'passed',
+        overallStatus,
     }
 }
