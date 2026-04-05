@@ -11,7 +11,7 @@ async function run(): Promise<void> {
         const stats = computeStats(input);
         const markdown = renderSummaryMarkdown(input, stats, summaryTitle);
 
-        core.summary.addRaw(markdown).write();
+        await core.summary.addRaw(markdown, true).write();
 
         core.setOutput('total', String(stats.total));
         core.setOutput('passed', String(stats.passed));
