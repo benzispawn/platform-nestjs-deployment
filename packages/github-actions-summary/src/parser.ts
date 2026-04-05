@@ -33,7 +33,7 @@ function normalizeCheck(raw: unknown): CheckResult {
 export function readSummaryInput(filePath: string): SummaryInput {
     const resolvePath = resolve(filePath);
     const fileContent = readFileSync(resolvePath, 'utf-8');
-    let parsed = JSON.parse(fileContent) as Record<string, unknown>;
+    const parsed = JSON.parse(fileContent) as Record<string, unknown>;
 
     if (typeof parsed.title !== 'string' || parsed.title.trim().length === 0) {
         throw new Error('Input JSON must contain a non-empty string field: title');
