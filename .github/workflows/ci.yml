@@ -4,7 +4,6 @@ on:
   pull_request:
   push:
     branches:
-      - develop
       - main
 
 jobs:
@@ -22,23 +21,24 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        # continue-on-error: true
         run: npm ci
 
       - name: Lint
-        # continue-on-error: true
+        id: lint
+        continue-on-error: true
         run: npm run lint
 
       - name: Test
-        # continue-on-error: true
+        id: test
+        continue-on-error: true
         run: npm run test
 
       - name: Build
-        # continue-on-error: true
+        id: build
+        continue-on-error: true
         run: npm run build
 
       - name: Generate CI result JSON
-        if: ${{ always()}}
         run: npm run report:ci -- artifacts/ci-result.json
         env:
           REPORT_TITLE: Sample Nest API CI
@@ -51,11 +51,10 @@ jobs:
 
       - name: Run summary action
         id: summary
-        uses: ./packages/github-actions-summary
-        # continue-on-error: true
+        uses: ./packages/github-action-summary
         with:
           input-file: artifacts/ci-result.json
-          summary-title: 'CI Summary Report'
+          summary-title: CI Summary Report
 
       - name: Annotate lint failure
         if: ${{ steps.lint.outcome == 'failure' }}
@@ -71,7 +70,7 @@ jobs:
 
       - name: Render markdown artifact
         run: npm run report:ci:md -- artifacts/ci-result.json artifacts/ci-report.md
-
+      
       - name: Upload CI report artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -80,7 +79,7 @@ jobs:
             artifacts/ci-result.json
             artifacts/ci-report.md
 
-      - name: Print Summary outputs
+      - name: Print summary outputs
         run: |
           echo "total=${{ steps.summary.outputs.total }}"
           echo "passed=${{ steps.summary.outputs.passed }}"
