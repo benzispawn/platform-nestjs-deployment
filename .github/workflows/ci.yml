@@ -51,7 +51,7 @@ jobs:
 
       - name: Run summary action
         id: summary
-        uses: ./packages/github-action-summary
+        uses: ./packages/github-actions-summary
         with:
           input-file: artifacts/ci-result.json
           summary-title: CI Summary Report
