@@ -1,0 +1,16 @@
+node_modules/
+
+coverage/
+dist/
+.tmp/
+
+.env
+.env.*
+
+.DS_Store
+.idea/
+.vscode/
+
+*.tsbuildinfo
+
+doc/blocks/.obsidian
