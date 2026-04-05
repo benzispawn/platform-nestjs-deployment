@@ -54,7 +54,7 @@ jobs:
         uses: ./packages/github-actions-summary
         continue-on-error: true
         with:
-          input-file: ci-result.json
+          input-file: artifacts/ci-result.json
           summary-title: 'CI Summary Report'
 
       - name: Annotate lint failure
@@ -68,12 +68,6 @@ jobs:
       - name: Annotate build failure
         if: ${{ steps.build.outcome == 'failure' }}
         run: echo '::error title=Build failed::The build step failed. Check compilation output in the logs.'
-
-      - name: Upload CI report artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ci-report
-          path: artifacts/ci-result.json
 
       - name: Render markdown artifact
         run: npm run report:ci:md -- artifacts/ci-result.json artifacts/ci-report.md
