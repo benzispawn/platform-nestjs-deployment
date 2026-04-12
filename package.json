@@ -17,7 +17,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "report:ci": "node scripts/generate-ci-report.js",
-    "report:ci:md": "node scripts/render-ci-report-markdown.js"
+    "report:ci:md": "node scripts/render-ci-report-markdown.js",
+    "report:ci:pr-comment": "node scripts/generate-pr-comment.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.24.0",

@@ -8,87 +8,9 @@ on:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        id: lint
-        continue-on-error: true
-        run: npm run lint
-
-      - name: Test
-        id: test
-        continue-on-error: true
-        run: npm run test
-
-      - name: Build
-        id: build
-        continue-on-error: true
-        run: npm run build
-
-      - name: Generate CI result JSON
-        run: npm run report:ci -- artifacts/ci-result.json
-        env:
-          REPORT_TITLE: Sample Nest API CI
-          LINT_OUTCOME: ${{ steps.lint.outcome }}
-          LINT_DETAILS: Lint workspace run completed.
-          TEST_OUTCOME: ${{ steps.test.outcome }}
-          TEST_DETAILS: Test workspace run completed.
-          BUILD_OUTCOME: ${{ steps.build.outcome }}
-          BUILD_DETAILS: Build workspace run completed.
-
-      - name: Run summary action
-        id: summary
-        uses: ./packages/github-actions-summary
-        with:
-          input-file: artifacts/ci-result.json
-          summary-title: CI Summary Report
-
-      - name: Annotate lint failure
-        if: ${{ steps.lint.outcome == 'failure' }}
-        run: echo '::error title=Lint failed::The lint step failed. Check eslint output in the logs.'
-
-      - name: Annotate test failure
-        if: ${{ steps.test.outcome == 'failure' }}
-        run: echo '::error title=Tests failed::The test step failed. Check jest output in the logs.'
-
-      - name: Annotate build failure
-        if: ${{ steps.build.outcome == 'failure' }}
-        run: echo '::error title=Build failed::The build step failed. Check compilation output in the logs.'
-
-      - name: Render markdown artifact
-        run: npm run report:ci:md -- artifacts/ci-result.json artifacts/ci-report.md
-
-      - name: Upload CI report artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ci-report
-          path: |
-            artifacts/ci-result.json
-            artifacts/ci-report.md
-
-      - name: Print summary outputs
-        run: |
-          echo "total=${{ steps.summary.outputs.total }}"
-          echo "passed=${{ steps.summary.outputs.passed }}"
-          echo "failed=${{ steps.summary.outputs.failed }}"
-          echo "skipped=${{ steps.summary.outputs.skipped }}"
-          echo "overall-status=${{ steps.summary.outputs.overall-status }}"
-
-      - name: Fail job if any quality gate failed
-        if: ${{ steps.summary.outputs.overall-status == 'failed' }}
-        run: |
-          echo 'At least one CI check failed.'
-          exit 1
+    uses: ./.github/workflows/reusable-node-ci.yml
+    with:
+      node-version: '24'
+      report-title: 'Sample Nest API CI'
+      working-directory: '.'
+      enable-pr-comment: true
