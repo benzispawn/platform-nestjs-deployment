@@ -68,7 +68,7 @@ jobs:
         run: npm ci
 
       - name: Build local action bundle
-        run: npm run build -w packages/github-action-summary
+        run: npm run build -w packages/github-actions-summary
         working-directory: .
 
       - name: Lint
@@ -102,7 +102,7 @@ jobs:
       - name: Run summary action
         if: ${{ always() }}
         id: summary
-        uses: ./packages/github-action-summary
+        uses: ./packages/github-actions-summary
         with:
           input-file: artifacts/ci-result.json
           summary-title: ${{ inputs.report-title }}
