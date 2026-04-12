@@ -1,0 +1,190 @@
+name: Reusable Node CI
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        required: false
+        type: string
+        default: '22'
+      report-title:
+        required: false
+        type: string
+        default: 'CI Report'
+      working-directory:
+        required: false
+        type: string
+        default: '.'
+      enable-pr-comment:
+        required: false
+        type: boolean
+        default: true
+    outputs:
+      overall-status:
+        description: Overall CI status
+        value: ${{ jobs.ci.outputs.overall-status }}
+      total:
+        description: Total number of checks
+        value: ${{ jobs.ci.outputs.total }}
+      passed:
+        description: Number of passed checks
+        value: ${{ jobs.ci.outputs.passed }}
+      failed:
+        description: Number of failed checks
+        value: ${{ jobs.ci.outputs.failed }}
+      skipped:
+        description: Number of skipped checks
+        value: ${{ jobs.ci.outputs.skipped }}
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    outputs:
+      overall-status: ${{ steps.summary.outputs.overall-status }}
+      total: ${{ steps.summary.outputs.total }}
+      passed: ${{ steps.summary.outputs.passed }}
+      failed: ${{ steps.summary.outputs.failed }}
+      skipped: ${{ steps.summary.outputs.skipped }}
+
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build local action bundle
+        run: npm run build -w packages/github-action-summary
+        working-directory: .
+
+      - name: Lint
+        id: lint
+        continue-on-error: true
+        run: npm run lint
+
+      - name: Test
+        id: test
+        continue-on-error: true
+        run: npm run test
+
+      - name: Build
+        id: build
+        continue-on-error: true
+        run: npm run build
+
+      - name: Generate CI result JSON
+        if: ${{ always() }}
+        run: npm run report:ci -- artifacts/ci-result.json
+        working-directory: .
+        env:
+          REPORT_TITLE: ${{ inputs.report-title }}
+          LINT_OUTCOME: ${{ steps.lint.outcome }}
+          LINT_DETAILS: Lint workspace run completed.
+          TEST_OUTCOME: ${{ steps.test.outcome }}
+          TEST_DETAILS: Test workspace run completed.
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          BUILD_DETAILS: Build workspace run completed.
+
+      - name: Run summary action
+        if: ${{ always() }}
+        id: summary
+        uses: ./packages/github-action-summary
+        with:
+          input-file: artifacts/ci-result.json
+          summary-title: ${{ inputs.report-title }}
+
+      - name: Render PR comment markdown
+        if: ${{ always() && github.event_name == 'pull_request' && inputs.enable-pr-comment }}
+        run: npm run report:ci:pr-comment -- artifacts/ci-result.json artifacts/pr-comment.md
+        working-directory: .
+
+      - name: Create or update PR comment
+        if: ${{ always() && github.event_name == 'pull_request' && inputs.enable-pr-comment }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const body = fs.readFileSync('artifacts/pr-comment.md', 'utf8');
+            const marker = '<!-- platform-study-ci-report -->';
+            const issue_number = context.payload.pull_request.number;
+            const { owner, repo } = context.repo;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existing = comments.find(
+              (comment) =>
+                comment.user?.type === 'Bot' &&
+                typeof comment.body === 'string' &&
+                comment.body.includes(marker),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
+
+      - name: Annotate lint failure
+        if: ${{ steps.lint.outcome == 'failure' }}
+        run: echo '::error title=Lint failed::The lint step failed. Check eslint output in the logs.'
+
+      - name: Annotate test failure
+        if: ${{ steps.test.outcome == 'failure' }}
+        run: echo '::error title=Tests failed::The test step failed. Check jest output in the logs.'
+
+      - name: Annotate build failure
+        if: ${{ steps.build.outcome == 'failure' }}
+        run: echo '::error title=Build failed::The build step failed. Check compilation output in the logs.'
+
+      - name: Upload CI report artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-report
+          path: |
+            artifacts/ci-result.json
+            artifacts/pr-comment.md
+
+      - name: Print summary outputs
+        if: ${{ always() }}
+        run: |
+          echo "total=${{ steps.summary.outputs.total }}"
+          echo "passed=${{ steps.summary.outputs.passed }}"
+          echo "failed=${{ steps.summary.outputs.failed }}"
+          echo "skipped=${{ steps.summary.outputs.skipped }}"
+          echo "overall-status=${{ steps.summary.outputs.overall-status }}"
+
+      - name: Fail job if any quality gate failed
+        if: ${{ steps.summary.outputs.overall-status == 'failed' }}
+        run: |
+          echo 'At least one CI check failed.'
+          exit 1
