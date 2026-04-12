@@ -9,6 +9,7 @@ function normalizeOutcome(outcome) {
 }
 
 const outputFile = process.argv[2] || 'artifacts/ci-report.json';
+const target = process.env.REPORT_TARGET || 'unknown-target';
 
 const checks = [
     {
@@ -30,6 +31,7 @@ const checks = [
 
 const report = {
     title: process.env.REPORT_TITLE || 'CI Report',
+    target,
     checks,
 };
 
