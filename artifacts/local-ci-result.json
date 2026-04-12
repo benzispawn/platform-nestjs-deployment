@@ -1,0 +1,20 @@
+{
+  "title": "Local CI Report",
+  "checks": [
+    {
+      "name": "lint",
+      "status": "passed",
+      "details": "Lint step finished."
+    },
+    {
+      "name": "test",
+      "status": "failed",
+      "details": "Test step finished."
+    },
+    {
+      "name": "build",
+      "status": "passed",
+      "details": "Build step finished."
+    }
+  ]
+}
