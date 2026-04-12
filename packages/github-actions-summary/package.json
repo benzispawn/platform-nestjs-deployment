@@ -1,0 +1,19 @@
+{
+  "name": "@packages/github-actions-summary",
+  "version": "0.0.1",
+  "private": true,
+  "main": "dist/index.cjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs --dts --out-dir dist",
+    "lint": "eslint \"src/**/*.ts\"",
+    "test": "node --test",
+    "dev": "node --loader ts-node/esm src/index.ts"
+  },
+  "devDependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.1",
+    "@types/node": "^25.5.2",
+    "tsup": "^8.5.1"
+  }
+}

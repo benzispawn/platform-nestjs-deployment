@@ -1,0 +1,28 @@
+name: 'GitHub Action Summary'
+description: 'Reads CI result JSON and writes a markdown summary with outputs'
+author: 'Raphael study monorepo'
+
+inputs:
+  input-file:
+    description: 'Path to the JSON file containing CI results'
+    required: true
+  summary-title:
+    description: 'Optional title override for the generated summary'
+    required: false
+    default: ''
+
+outputs:
+  total:
+    description: 'Total number of checks'
+  passed:
+    description: 'Number of passed checks'
+  failed:
+    description: 'Number of failed checks'
+  skipped:
+    description: 'Number of skipped checks'
+  overall-status:
+    description: 'Overall status derived from all checks'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

@@ -102,8 +102,8 @@ platform-study-monorepo/
   apps/
     sample-nest-api/
   packages/
-    github-action-summary/
-    github-action-pr-comment/
+    github-actions-summary/
+    github-actions-pr-comment/
     shared-report-models/
   infra/
     terraform/

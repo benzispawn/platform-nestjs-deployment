@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+      - main
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      - name: Create CI result JSON
+        run: |
+          cat <<'EOF' > ci-result.json
+          {
+            "title": "Sample Nest API CI",
+            "checks": [
+              {
+                "name": "lint",
+                "status": "passed",
+                "details": "Lint completed successfully"
+              },
+              {
+                "name": "test",
+                "status": "passed",
+                "details": "Tests completed successfully"
+              },
+              {
+                "name": "build",
+                "status": "passed",
+                "details": "Build completed successfully"
+              }
+            ]
+          }
+          EOF
+
+      - name: Run summary action
+        id: summary
+        uses: ./packages/github-actions-summary
+        with:
+          input-file: ci-result.json
+          summary-title: 'CI Summary Report'
+
+      - name: Print outputs
+        run: |
+          echo "total=${{ steps.summary.outputs.total }}"
+          echo "passed=${{ steps.summary.outputs.passed }}"
+          echo "failed=${{ steps.summary.outputs.failed }}"
+          echo "skipped=${{ steps.summary.outputs.skipped }}"
+          echo "overall-status=${{ steps.summary.outputs.overall-status }}"
