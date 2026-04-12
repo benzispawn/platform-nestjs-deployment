@@ -1,0 +1,163 @@
+name: Reusable Workspace Quality
+
+on:
+  workflow_call:
+    inputs:
+      workspace-name:
+        required: true
+        type: string
+      workspace-path:
+        required: true
+        type: string
+      node-version:
+        required: false
+        type: string
+        default: '22'
+      enable-pr-comment:
+        required: false
+        type: boolean
+        default: true
+    outputs:
+      overall-status:
+        description: Overall workspace CI status
+        value: ${{ jobs.quality.outputs.overall-status }}
+      total:
+        description: Total checks
+        value: ${{ jobs.quality.outputs.total }}
+      passed:
+        description: Passed checks
+        value: ${{ jobs.quality.outputs.passed }}
+      failed:
+        description: Failed checks
+        value: ${{ jobs.quality.outputs.failed }}
+      skipped:
+        description: Skipped checks
+        value: ${{ jobs.quality.outputs.skipped }}
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    outputs:
+      overall-status: ${{ steps.summary.outputs.overall-status }}
+      total: ${{ steps.summary.outputs.total }}
+      passed: ${{ steps.summary.outputs.passed }}
+      failed: ${{ steps.summary.outputs.failed }}
+      skipped: ${{ steps.summary.outputs.skipped }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build local action bundle
+        run: npm run build -w packages/github-action-summary
+
+      - name: Lint workspace
+        id: lint
+        continue-on-error: true
+        run: npm run lint -w ${{ inputs.workspace-name }}
+
+      - name: Test workspace
+        id: test
+        continue-on-error: true
+        run: npm run test -w ${{ inputs.workspace-name }}
+
+      - name: Build workspace
+        id: build
+        continue-on-error: true
+        run: npm run build -w ${{ inputs.workspace-name }}
+
+      - name: Generate workspace report JSON
+        if: ${{ always() }}
+        run: npm run report:ci -- artifacts/${{ inputs.workspace-name }}-ci-result.json
+        env:
+          REPORT_TITLE: Workspace Quality Report
+          REPORT_TARGET: ${{ inputs.workspace-name }}
+          LINT_OUTCOME: ${{ steps.lint.outcome }}
+          LINT_DETAILS: Lint finished for ${{ inputs.workspace-name }}.
+          TEST_OUTCOME: ${{ steps.test.outcome }}
+          TEST_DETAILS: Tests finished for ${{ inputs.workspace-name }}.
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          BUILD_DETAILS: Build finished for ${{ inputs.workspace-name }}.
+
+      - name: Run summary action
+        if: ${{ always() }}
+        id: summary
+        uses: ./packages/github-action-summary
+        with:
+          input-file: artifacts/${{ inputs.workspace-name }}-ci-result.json
+          summary-title: Workspace Quality — ${{ inputs.workspace-name }}
+
+      - name: Render PR comment markdown
+        if: ${{ always() && github.event_name == 'pull_request' && inputs.enable-pr-comment }}
+        run: npm run report:ci:pr-comment -- artifacts/${{ inputs.workspace-name }}-ci-result.json artifacts/${{ inputs.workspace-name }}-pr-comment.md
+
+      - name: Create or update PR comment
+        if: ${{ always() && github.event_name == 'pull_request' && inputs.enable-pr-comment }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const body = fs.readFileSync('artifacts/${{ inputs.workspace-name }}-pr-comment.md', 'utf8');
+            const marker = '<!-- platform-study-ci-report -->';
+            const workspaceMarker = `<!-- workspace:${{ inputs.workspace-name }} -->`;
+            const finalBody = `${marker}\n${workspaceMarker}\n${body.replace(marker, '').trim()}`;
+            const issue_number = context.payload.pull_request.number;
+            const { owner, repo } = context.repo;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existing = comments.find(
+              (comment) =>
+                comment.user?.type === 'Bot' &&
+                typeof comment.body === 'string' &&
+                comment.body.includes(workspaceMarker),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body: finalBody,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body: finalBody,
+              });
+            }
+
+      - name: Upload workspace report artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.workspace-name }}-ci-report
+          path: |
+            artifacts/${{ inputs.workspace-name }}-ci-result.json
+            artifacts/${{ inputs.workspace-name }}-pr-comment.md
+
+      - name: Fail job if workspace quality gate failed
+        if: ${{ steps.summary.outputs.overall-status == 'failed' }}
+        run: |
+          echo 'At least one workspace quality check failed.'
+          exit 1

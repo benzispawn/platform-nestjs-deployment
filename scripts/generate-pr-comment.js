@@ -10,7 +10,7 @@ const icon = (status) => {
   if (status === 'success') return '✅';
   if (status === 'failure') return '❌';
   if (status === 'skipped') return '⏭️';
-  return '⚠️';
+  return '•';
 }
 
 const total = input.checks.length;
@@ -18,10 +18,13 @@ const passed = input.checks.filter((check) => check.status === 'passed').length;
 const failed = input.checks.filter((check) => check.status === 'failed').length;
 const skipped = input.checks.filter((check) => check.status === 'skipped').length;
 const overall = failed > 0 ? 'failed' : passed === 0 && skipped > 0 ? 'skipped' : 'passed';
+const target = input.target || 'unknown target';
 
 const lines = [
   '<!-- platform-study-ci-report -->',
   `## ${input.title}`,
+  '',
+  `**Target**: ${target}`,
   '',
   `- **Overall status**: ${overall}`,
   `- **Total**: ${total}`,
