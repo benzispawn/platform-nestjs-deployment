@@ -19874,9 +19874,17 @@ function computeStats(input) {
       skipped: 0
     }
   );
+  let overallStatus;
+  if (stats.failed > 0) {
+    overallStatus = "failed";
+  } else if (stats.passed === 0 && stats.skipped > 0) {
+    overallStatus = "skipped";
+  } else {
+    overallStatus = "passed";
+  }
   return {
     ...stats,
-    overallStatus: stats.failed > 0 ? "failed" : "passed"
+    overallStatus
   };
 }
 
@@ -19922,7 +19930,7 @@ async function run() {
     const input = readSummaryInput(inputFile);
     const stats = computeStats(input);
     const markdown = renderSummaryMarkdown(input, stats, summaryTitle);
-    core.summary.addRaw(markdown).write();
+    await core.summary.addRaw(markdown, true).write();
     core.setOutput("total", String(stats.total));
     core.setOutput("passed", String(stats.passed));
     core.setOutput("failed", String(stats.failed));

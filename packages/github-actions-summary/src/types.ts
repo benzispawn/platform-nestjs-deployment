@@ -16,5 +16,5 @@ export interface SummaryStats {
     passed: number;
     failed: number;
     skipped: number;
-    overallStatus: CheckStatus | 'passed';
+    overallStatus: CheckStatus;
 }

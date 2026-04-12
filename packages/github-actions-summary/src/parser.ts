@@ -50,22 +50,32 @@ export function readSummaryInput(filePath: string): SummaryInput {
 }
 
 export function computeStats(input: SummaryInput): SummaryStats {
-    const stats = input.checks.reduce(
-        (acc, check) => {
-            acc.total += 1;
-            acc[check.status] += 1;
-            return acc;
-        },
-        {
-            total: 0,
-            passed: 0,
-            failed: 0,
-            skipped: 0,
-        },
-    );
+  const stats = input.checks.reduce(
+      (acc, check) => {
+          acc.total += 1;
+          acc[check.status] += 1;
+          return acc;
+      },
+      {
+          total: 0,
+          passed: 0,
+          failed: 0,
+          skipped: 0,
+      },
+  );
 
-    return {
-        ...stats,
-        overallStatus: stats.failed > 0 ? 'failed' : 'passed',
-    }
+  let overallStatus: CheckStatus;
+
+  if (stats.failed > 0) {
+      overallStatus = 'failed';
+  } else if (stats.passed === 0 && stats.skipped > 0) {
+      overallStatus = 'skipped';
+  } else {
+      overallStatus = 'passed';
+  }
+
+  return {
+      ...stats,
+      overallStatus,
+  }
 }
